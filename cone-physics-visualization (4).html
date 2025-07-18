@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Física do Cone Topológico - Visualização</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a0a;
+            color: white;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        #canvas {
+            display: block;
+            margin: 0 auto;
+            border: 1px solid #333;
+        }
+        
+        .controls {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            max-width: 300px;
+        }
+        
+        .control-group {
+            margin: 15px 0;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #00ff88;
+            font-size: 14px;
+        }
+        
+        input[type="range"] {
+            width: 100%;
+            height: 5px;
+            background: #333;
+            outline: none;
+            -webkit-appearance: none;
+            border-radius: 5px;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 15px;
+            height: 15px;
+            background: #00ff88;
+            cursor: pointer;
+            border-radius: 50%;
+        }
+        
+        .value-display {
+            display: inline-block;
+            color: #ff6b6b;
+            font-weight: bold;
+            min-width: 30px;
+        }
+        
+        h3 {
+            color: #00ff88;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .legend {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid #444;
+            font-size: 12px;
+        }
+        
+        .legend-item {
+            margin: 5px 0;
+            display: flex;
+            align-items: center;
+        }
+        
+        .legend-color {
+            width: 20px;
+            height: 3px;
+            margin-right: 10px;
+            border-radius: 2px;
+        }
+        
+        .title {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 24px;
+            color: #00ff88;
+            text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+        }
+        
+        button {
+            background: #00ff88;
+            border: none;
+            color: black;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            margin-top: 10px;
+            width: 100%;
+        }
+        
+        button:hover {
+            background: #00cc66;
+        }
+        
+        .physics-note {
+            background: rgba(100, 100, 255, 0.1);
+            border: 1px solid rgba(100, 100, 255, 0.3);
+            border-radius: 5px;
+            padding: 10px;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <canvas id="canvas"></canvas>
+    
+    <div class="title">Física do Cone Topológico</div>
+    
+    <div class="controls">
+        <h3>Controles</h3>
+        
+        <div class="control-group">
+            <label>Momento Angular j: <span class="value-display" id="j-value">3</span></label>
+            <input type="range" id="j-slider" min="0" max="10" value="3" step="0.5">
+        </div>
+        
+        <div class="control-group">
+            <label>Número Quântico n: <span class="value-display" id="n-value">1</span></label>
+            <input type="range" id="n-slider" min="1" max="8" value="1" step="1">
+        </div>
+        
+        <div class="control-group">
+            <label>Ângulo do Cone α/π: <span class="value-display" id="alpha-value">0.25</span></label>
+            <input type="range" id="alpha-slider" min="0.05" max="0.5" value="0.25" step="0.01">
+        </div>
+        
+        <div class="control-group">
+            <label>Visualização:</label>
+            <button id="toggle-potential">Alternar Campo Potencial</button>
+            <button id="toggle-forces">Alternar Forças</button>
+            <button id="toggle-wavefunction">Alternar Função de Onda</button>
+            <button id="toggle-spin">Alternar Vetores de Spin</button>
+        </div>
+        
+        <div class="physics-note">
+            <strong>Física:</strong><br>
+            • j=0: Estados na ponta<br>
+            • j grande: Estados na base<br>
+            • n grande: Compressão + nós<br>
+            • Linhas azuis: Força para dentro (n + geometria)<br>
+            • Linhas laranjas: Força para fora (j)<br>
+            • <strong>Spin:</strong> Curvatura quebra spin-momentum locking
+        </div>
+    </div>
+    
+    <div class="legend">
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(90deg, #ff0000, #0000ff);"></div>
+            <span>Potencial Geométrico (vermelho = forte)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #00ff88;"></div>
+            <span>Densidade |ψ|²</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff00ff;"></div>
+            <span>Nós da Função (n)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: linear-gradient(90deg, #0096ff, #ffaa00);"></div>
+            <span>Linhas de Campo (azul→dentro, laranja→fora)</span>
+        </div>
+        <div class="legend-item">
+            <div class="legend-color" style="background: #ff1744;"></div>
+            <span>Vetores de Spin (vermelho = componente z)</span>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Configurações
+        let width = window.innerWidth;
+        let height = window.innerHeight;
+        canvas.width = width;
+        canvas.height = height;
+        
+        // Parâmetros
+        let j = 3;
+        let n = 1;
+        let alpha = 0.25 * Math.PI;
+        let showPotential = true;
+        let showForces = true;
+        let showWavefunction = true;
+        let showSpin = false;
+        
+        // Centro e escala
+        let centerX = width / 2;
+        let centerY = height * 0.6;
+        let scale = Math.min(width, height) * 0.35;
+        
+        // Animação
+        let time = 0;
+        
+        // Atualizar valores dos sliders
+        document.getElementById('j-slider').addEventListener('input', (e) => {
+            j = parseFloat(e.target.value);
+            document.getElementById('j-value').textContent = j;
+        });
+        
+        document.getElementById('n-slider').addEventListener('input', (e) => {
+            n = parseInt(e.target.value);
+            document.getElementById('n-value').textContent = n;
+        });
+        
+        document.getElementById('alpha-slider').addEventListener('input', (e) => {
+            alpha = parseFloat(e.target.value) * Math.PI;
+            document.getElementById('alpha-value').textContent = e.target.value;
+        });
+        
+        // Botões de visualização
+        document.getElementById('toggle-potential').addEventListener('click', () => {
+            showPotential = !showPotential;
+        });
+        
+        document.getElementById('toggle-forces').addEventListener('click', () => {
+            showForces = !showForces;
+        });
+        
+        document.getElementById('toggle-wavefunction').addEventListener('click', () => {
+            showWavefunction = !showWavefunction;
+        });
+        
+        document.getElementById('toggle-spin').addEventListener('click', () => {
+            showSpin = !showSpin;
+        });
+        
+        // Funções auxiliares
+        function drawCone() {
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 2;
+            
+            // Desenhar cone
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            // Linhas do cone
+            ctx.beginPath();
+            ctx.moveTo(centerX, centerY - coneHeight);
+            ctx.lineTo(centerX - coneRadius, centerY);
+            ctx.lineTo(centerX + coneRadius, centerY);
+            ctx.closePath();
+            ctx.stroke();
+            
+            // Círculos para mostrar a estrutura 3D
+            for (let h = 0; h < 1; h += 0.1) {
+                const y = centerY - coneHeight * (1 - h);
+                const r = coneRadius * h;
+                ctx.beginPath();
+                ctx.ellipse(centerX, y, r, r * 0.3, 0, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        }
+        
+        function drawPotentialField() {
+            if (!showPotential) return;
+            
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            // Gradiente radial para mostrar o potencial geométrico
+            for (let y = centerY - coneHeight; y <= centerY; y += 5) {
+                const h = (centerY - y) / coneHeight;
+                const r = coneRadius * (1 - h);
+                
+                // Intensidade do potencial (mais forte perto da ponta)
+                const intensity = Math.pow(h, 1/alpha);
+                
+                // Cor do potencial
+                const red = Math.floor(255 * intensity);
+                const blue = Math.floor(255 * (1 - intensity));
+                
+                ctx.strokeStyle = `rgba(${red}, 0, ${blue}, 0.3)`;
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.ellipse(centerX, y, r, r * 0.3, 0, 0, 2 * Math.PI);
+                ctx.stroke();
+            }
+        }
+        
+        function drawCentrifugalForce() {
+            // Removido - mantemos apenas as linhas de campo laranja
+            return;
+        }
+        
+        function drawWaveFunction() {
+            if (!showWavefunction) return;
+            
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            // Simular densidade |ψ|² com efeitos corretos
+            for (let h = 0.01; h < 1; h += 0.02) {
+                const y = centerY - coneHeight * (1 - h);
+                const r = coneRadius * h;
+                
+                // Calcular densidade com física correta
+                const rho = -1 / (2 * alpha);
+                
+                // Fator geométrico r^(2ρ)
+                const geometricFactor = Math.pow(h + 0.001, 2 * rho);
+                
+                // Efeito do momento angular j
+                let angularEffect = 1;
+                if (j > 0) {
+                    // Para j grande, densidade é empurrada para fora (base)
+                    angularEffect = Math.exp(-Math.pow((h - j*alpha/5), 2) / (0.1 + j*alpha/10));
+                }
+                
+                // Efeito do número quântico n (oscilações e compressão)
+                const zeta_approx = n * Math.PI; // Aproximação do n-ésimo zero
+                const besselArg = zeta_approx * h;
+                const oscillation = Math.abs(Math.cos(besselArg)) * Math.exp(-n * h / 3);
+                
+                // Nós da função
+                const nodeEffect = Math.abs(Math.sin(n * Math.PI * h));
+                
+                // Densidade total
+                let density;
+                if (j === 0) {
+                    // j=0: concentra na ponta
+                    density = geometricFactor * oscillation * Math.exp(-3 * h);
+                } else {
+                    // j>0: competição entre geometria e força centrífuga
+                    density = geometricFactor * angularEffect * oscillation;
+                }
+                
+                // Normalização aproximada
+                density = density * Math.exp(-n/5);
+                
+                // Limitar densidade para evitar saturação
+                density = Math.min(density, 1.5);
+                
+                // Desenhar anel com opacidade mais sutil e contida
+                const opacity = Math.min(density * 0.6, 0.5); // Reduzir opacidade máxima
+                ctx.strokeStyle = `rgba(0, 255, 136, ${opacity})`;
+                ctx.lineWidth = Math.max(0.5, Math.min(density * 8, 5)); // Limitar largura
+                ctx.beginPath();
+                ctx.ellipse(centerX, y, r * 0.95, r * 0.3 * 0.95, 0, 0, 2 * Math.PI); // Reduzir 5% para ficar dentro
+                ctx.stroke();
+                
+                // Marcar nós para n > 1
+                if (n > 1 && nodeEffect < 0.1) {
+                    ctx.strokeStyle = 'rgba(255, 0, 255, 0.6)';
+                    ctx.lineWidth = 2;
+                    ctx.setLineDash([3, 3]);
+                    ctx.beginPath();
+                    ctx.ellipse(centerX, y, r, r * 0.3, 0, 0, 2 * Math.PI);
+                    ctx.stroke();
+                    ctx.setLineDash([]);
+                }
+            }
+        }
+        
+        function drawEquilibriumPosition() {
+            if (!showForces) return;
+            
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            // Posição de equilíbrio aproximada
+            let equilibriumH;
+            
+            if (j === 0) {
+                equilibriumH = 0.05 / n; // Na ponta para j=0, mais perto com n grande
+            } else {
+                // Para j > 0, equilíbrio move para fora
+                equilibriumH = Math.min(0.9, Math.sqrt(j * alpha / (2 * Math.PI)) / n);
+            }
+            
+            const eqY = centerY - coneHeight * (1 - equilibriumH);
+            const eqR = coneRadius * equilibriumH;
+            
+            // Desenhar indicador de máximo da densidade
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.arc(centerX - eqR, eqY, 5, 0, 2 * Math.PI);
+            ctx.arc(centerX + eqR, eqY, 5, 0, 2 * Math.PI);
+            ctx.stroke();
+            
+            // Texto indicativo
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            ctx.font = '14px Arial';
+            ctx.fillText('Máximo |ψ|²', centerX + eqR + 15, eqY);
+        }
+        
+        function drawFieldLines() {
+            if (!showForces) return;
+            
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            // Desenhar linhas de campo devido a j e n
+            ctx.save();
+            
+            // Configurar estilo das linhas
+            ctx.lineWidth = 1.5;
+            ctx.globalAlpha = 0.4;
+            
+            // Linhas de campo em diferentes ângulos
+            for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 4) {
+                // Criar linha de campo que mostra a competição j vs n
+                ctx.beginPath();
+                
+                let prevX = null, prevY = null;
+                
+                for (let t = 0; t <= 1; t += 0.02) {
+                    const h = t * 0.95 + 0.025; // Evitar singularidade na ponta
+                    const y = centerY - coneHeight * (1 - h);
+                    const r = coneRadius * h;
+                    
+                    // Força devido a j (centrífuga, para fora)
+                    const F_j = j > 0 ? (j * j) / (h * h + 0.1) : 0;
+                    
+                    // Força devido a n (compressão, para dentro)
+                    const F_n = n * n * Math.exp(-h * n) / (h + 0.1);
+                    
+                    // Força geométrica (sempre para dentro/ponta)
+                    const F_geom = 1 / (h + 0.01) / alpha;
+                    
+                    // Força resultante (positivo = para fora, negativo = para dentro)
+                    const F_net = F_j - F_n - F_geom;
+                    
+                    // Deformação da linha baseada na força (limitada para ficar dentro do cone)
+                    const deformation = Math.max(-0.3, Math.min(0.3, F_net * 0.01));
+                    const adjustedR = r * (1 + deformation);
+                    
+                    // Garantir que não saia do cone
+                    const maxR = coneRadius * h;
+                    const finalR = Math.min(adjustedR, maxR * 0.98);
+                    
+                    // Posição na linha
+                    const x = centerX + finalR * Math.cos(angle + time * 0.3);
+                    const adjustedY = y + finalR * 0.3 * Math.sin(angle + time * 0.3);
+                    
+                    if (prevX !== null && finalR <= maxR * 0.98) {
+                        // Cor baseada na direção da força
+                        if (F_net > 0) {
+                            // Força para fora (j domina) - amarelo/laranja
+                            const green = Math.max(100, Math.min(200, 200 - Math.abs(F_net) * 20));
+                            ctx.strokeStyle = `rgba(255, ${green}, 0, 0.6)`;
+                        } else {
+                            // Força para dentro (n+geometria dominam) - azul/ciano
+                            const green = Math.max(100, Math.min(200, 100 + Math.abs(F_net) * 20));
+                            ctx.strokeStyle = `rgba(0, ${green}, 255, 0.6)`;
+                        }
+                        
+                        ctx.beginPath();
+                        ctx.moveTo(prevX, prevY);
+                        ctx.lineTo(x, adjustedY);
+                        ctx.stroke();
+                    }
+                    
+                    if (finalR <= maxR * 0.98) {
+                        prevX = x;
+                        prevY = adjustedY;
+                    } else {
+                        prevX = null;
+                        prevY = null;
+                    }
+                }
+            }
+            
+            // Desenhar pequenas setas indicando direção do campo
+            for (let h = 0.2; h < 0.9; h += 0.2) {
+                for (let angle = 0; angle < 2 * Math.PI; angle += Math.PI / 3) {
+                    const y = centerY - coneHeight * (1 - h);
+                    const r = coneRadius * h;
+                    
+                    const F_j = j > 0 ? (j * j) / (h * h + 0.1) : 0;
+                    const F_n = n * n * Math.exp(-h * n) / (h + 0.1);
+                    const F_geom = 1 / (h + 0.01) / alpha;
+                    const F_net = F_j - F_n - F_geom;
+                    
+                    const x = centerX + r * Math.cos(angle);
+                    const adjustedY = y + r * 0.3 * Math.sin(angle);
+                    
+                    // Desenhar setinha
+                    const arrowSize = 8;
+                    const arrowAngle = F_net > 0 ? angle : angle + Math.PI;
+                    
+                    ctx.strokeStyle = F_net > 0 ? 'rgba(255, 200, 0, 0.5)' : 'rgba(0, 150, 255, 0.5)';
+                    ctx.lineWidth = 2;
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(x, adjustedY);
+                    ctx.lineTo(
+                        x + arrowSize * Math.cos(arrowAngle),
+                        adjustedY + arrowSize * 0.3 * Math.sin(arrowAngle)
+                    );
+                    ctx.stroke();
+                    
+                    // Ponta da seta
+                    ctx.beginPath();
+                    ctx.moveTo(
+                        x + arrowSize * Math.cos(arrowAngle),
+                        adjustedY + arrowSize * 0.3 * Math.sin(arrowAngle)
+                    );
+                    ctx.lineTo(
+                        x + arrowSize * 0.6 * Math.cos(arrowAngle + 0.4),
+                        adjustedY + arrowSize * 0.6 * 0.3 * Math.sin(arrowAngle + 0.4)
+                    );
+                    ctx.stroke();
+                }
+            }
+            
+            ctx.restore();
+        }
+        
+        function drawSpinVectors() {
+            if (!showSpin) return;
+            
+            const coneHeight = scale * 1.5;
+            const coneRadius = coneHeight * Math.tan(alpha);
+            
+            ctx.save();
+            
+            // Desenhar vetores de spin em uma grade
+            for (let h = 0.1; h < 0.9; h += 0.15) {
+                const y = centerY - coneHeight * (1 - h);
+                const r = coneRadius * h;
+                
+                // Número de spins ao redor do círculo
+                const numSpins = Math.floor(8 * h + 4);
+                
+                for (let i = 0; i < numSpins; i++) {
+                    const angle = (i / numSpins) * 2 * Math.PI + j * time * 0.5;
+                    
+                    // Posição do spin
+                    const x = centerX + r * Math.cos(angle);
+                    const adjustedY = y + r * 0.3 * Math.sin(angle);
+                    
+                    // Componente no plano (spin-momentum locking normal)
+                    // Perpendicular ao momento (tangencial)
+                    const spinInPlaneX = -Math.sin(angle);
+                    const spinInPlaneY = Math.cos(angle) * 0.3;
+                    
+                    // Campo geométrico efetivo - mais forte perto da ponta
+                    const geometricField = 1 / (h + 0.1) / alpha;
+                    
+                    // Torque aplicado pelo campo geométrico
+                    // Induz componente fora do plano (z)
+                    const spinOutOfPlane = geometricField * 0.4 * Math.sin(2 * angle);
+                    
+                    // Tamanho base do vetor
+                    const baseLength = 25;
+                    
+                    // Desenhar componente no plano (azul) - MAIS VISÍVEL
+                    ctx.strokeStyle = 'rgba(0, 150, 255, 1)';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.moveTo(x, adjustedY);
+                    ctx.lineTo(
+                        x + baseLength * spinInPlaneX * 1.5,
+                        adjustedY + baseLength * spinInPlaneY * 1.5
+                    );
+                    ctx.stroke();
+                    
+                    // Ponta da seta para componente no plano
+                    const arrowSizePlane = 6;
+                    const endX = x + baseLength * spinInPlaneX * 1.5;
+                    const endY = adjustedY + baseLength * spinInPlaneY * 1.5;
+                    ctx.beginPath();
+                    ctx.moveTo(endX, endY);
+                    ctx.lineTo(
+                        endX - arrowSizePlane * Math.cos(angle - Math.PI/2 + 0.3),
+                        endY - arrowSizePlane * 0.3 * Math.sin(angle - Math.PI/2 + 0.3)
+                    );
+                    ctx.lineTo(
+                        endX - arrowSizePlane * Math.cos(angle - Math.PI/2 - 0.3),
+                        endY - arrowSizePlane * 0.3 * Math.sin(angle - Math.PI/2 - 0.3)
+                    );
+                    ctx.closePath();
+                    ctx.fillStyle = 'rgba(0, 150, 255, 1)';
+                    ctx.fill();
+                    
+                    // Desenhar componente fora do plano (vermelho)
+                    if (Math.abs(spinOutOfPlane) > 0.01) {
+                        ctx.strokeStyle = 'rgba(255, 23, 68, 1)';
+                        ctx.lineWidth = 3.5;
+                        ctx.beginPath();
+                        ctx.moveTo(x, adjustedY);
+                        
+                        // Componente z representada como linha vertical
+                        const zComponent = -baseLength * spinOutOfPlane;
+                        ctx.lineTo(x, adjustedY + zComponent);
+                        ctx.stroke();
+                        
+                        // Ponta da seta para componente z
+                        const arrowSize = 5;
+                        ctx.beginPath();
+                        if (zComponent < 0) {
+                            ctx.moveTo(x, adjustedY + zComponent);
+                            ctx.lineTo(x - arrowSize/2, adjustedY + zComponent + arrowSize);
+                            ctx.lineTo(x + arrowSize/2, adjustedY + zComponent + arrowSize);
+                        } else {
+                            ctx.moveTo(x, adjustedY + zComponent);
+                            ctx.lineTo(x - arrowSize/2, adjustedY + zComponent - arrowSize);
+                            ctx.lineTo(x + arrowSize/2, adjustedY + zComponent - arrowSize);
+                        }
+                        ctx.closePath();
+                        ctx.fillStyle = 'rgba(255, 23, 68, 1)';
+                        ctx.fill();
+                    }
+                    
+                    // Desenhar ponto base
+                    ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+                    ctx.beginPath();
+                    ctx.arc(x, adjustedY, 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
+            }
+            
+            // Legenda do efeito
+            ctx.fillStyle = 'rgba(255, 255, 255, 1)';
+            ctx.font = 'bold 16px Arial';
+            ctx.fillText('Quebra do Spin-Momentum Locking', width - 320, 40);
+            ctx.font = '14px Arial';
+            ctx.fillText('Azul: componente no plano', width - 320, 65);
+            ctx.fillText('Vermelho: componente z (torque geométrico)', width - 320, 85);
+            
+            ctx.restore();
+        }
+        
+        function drawLabels() {
+            ctx.fillStyle = '#00ff88';
+            ctx.font = 'bold 16px Arial';
+            
+            // Label da ponta
+            const coneHeight = scale * 1.5;
+            ctx.fillText('Ponta (r→0)', centerX - 40, centerY - coneHeight - 20);
+            ctx.fillText('Potencial Forte', centerX - 50, centerY - coneHeight - 5);
+            
+            // Label da base
+            ctx.fillText('Base do Cone', centerX - 50, centerY + 30);
+            
+            // Informações dinâmicas
+            ctx.fillStyle = '#ff6b6b';
+            ctx.font = '14px Arial';
+            const info = [
+                `ρ = -1/(2α) = ${(-1/(2*alpha/Math.PI)).toFixed(2)}/π`,
+                `Força centrífuga ∝ j²/r²`,
+                j === 0 ? 'Estados concentrados na ponta' : 
+                         j < 3 ? 'Competição geometria vs rotação' : 
+                         'Força centrífuga domina → base',
+                `n = ${n}: ${n === 1 ? 'Estado fundamental' : `${n-1} nós radiais`}`
+            ];
+            
+            info.forEach((text, i) => {
+                ctx.fillText(text, 10, height - 80 + i * 20);
+            });
+        }
+        
+        // Loop de animação
+        function animate() {
+            // Limpar canvas
+            ctx.fillStyle = 'rgba(10, 10, 10, 0.1)';
+            ctx.fillRect(0, 0, width, height);
+            
+            // Desenhar elementos
+            drawPotentialField();
+            drawCone();
+            drawCentrifugalForce();
+            drawFieldLines();
+            drawWaveFunction();
+            drawSpinVectors(); // Nova função de vetores de spin
+            drawEquilibriumPosition();
+            drawLabels();
+            
+            // Atualizar tempo
+            time += 0.02;
+            
+            requestAnimationFrame(animate);
+        }
+        
+        // Redimensionar canvas
+        window.addEventListener('resize', () => {
+            width = window.innerWidth;
+            height = window.innerHeight;
+            canvas.width = width;
+            canvas.height = height;
+            centerX = width / 2;
+            centerY = height * 0.6;
+            scale = Math.min(width, height) * 0.35;
+        });
+        
+        // Iniciar animação
+        animate();
+    </script>
+</body>
+</html>
