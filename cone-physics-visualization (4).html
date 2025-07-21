@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Física do Cone Topológico - Visualização</title>
+    <title>IT cônico - Visualização</title>
     <style>
         body {
             margin: 0;
@@ -166,7 +166,6 @@
         </div>
         
         <div class="physics-note">
-            <strong>Física:</strong><br>
             • j=0: Estados na ponta<br>
             • j grande: Estados na base<br>
             • n grande: Compressão + nós<br>
@@ -673,8 +672,6 @@
             ctx.fillStyle = '#ff6b6b';
             ctx.font = '14px Arial';
             const info = [
-                `ρ = -1/(2α) = ${(-1/(2*alpha/Math.PI)).toFixed(2)}/π`,
-                `Força centrífuga ∝ j²/r²`,
                 j === 0 ? 'Estados concentrados na ponta' : 
                          j < 3 ? 'Competição geometria vs rotação' : 
                          'Força centrífuga domina → base',
