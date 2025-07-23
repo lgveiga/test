@@ -220,7 +220,7 @@
         let showSpin = false;
 
         // Centro e escala
-        let centerX = width / 1.7;
+        let centerX = width / 1.5;
         let centerY = height * 0.6;
         let scale = Math.min(width, height) * 0.28;
 
@@ -665,7 +665,7 @@
             // Label da ponta
             const coneHeight = scale * 1.5;
             ctx.fillText('Ponta (r→0)', centerX - 40, centerY - coneHeight - 20);
-            ctx.fillText('Potencial Forte', centerX - 50, centerY - coneHeight - 5);
+            
 
             // Label da base
             ctx.fillText('Base do Cone', centerX - 50, centerY + 30);
@@ -681,7 +681,7 @@
             ];
 
             info.forEach((text, i) => {
-                ctx.fillText(text, 300, height - 40 + i * 20);
+                ctx.fillText(text, 10, height - 40 + i * 20);
             });
         }
 
